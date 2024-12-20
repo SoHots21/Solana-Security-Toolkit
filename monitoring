@@ -1,0 +1,71 @@
+How to Use
+	1.	Navigate to the Monitoring Directory
+cd monitoring
+2.	Run the Monitor Script
+python3 monitor.py
+
+The script will check the Solana node’s block height every minute and notify you of the node’s health status.
+
+3. Secure Deployment
+
+Deploy a secure Solana node with pre-configured security settings.
+
+Deployment Script
+
+#!/bin/bash
+# deployment/deploy_secure_node.sh
+
+set -e
+
+# Variables (update these as needed)
+SOLANA_VERSION="stable"
+IDENTITY_PATH="/path/to/identity.json"
+VOTE_ACCOUNT_PATH="/path/to/vote-account.json"
+ENTRYPOINT="entrypoint.mainnet-beta.solana.com:8001"
+
+# Update and install necessary packages
+echo "Updating system and installing packages..."
+sudo apt-get update && sudo apt-get upgrade -y
+sudo apt-get install -y ufw fail2ban curl
+
+# Setup firewall
+echo "Configuring UFW firewall..."
+sudo ufw allow ssh
+sudo ufw allow 8899/tcp   # RPC port
+sudo ufw allow 8001/tcp   # TPU port
+sudo ufw enable
+
+# Configure fail2ban
+echo "Configuring fail2ban..."
+sudo bash -c 'cat <<EOT >> /etc/fail2ban/jail.local
+[sshd]
+enabled = true
+port = ssh
+logpath = /var/log/auth.log
+maxretry = 5
+EOT'
+
+sudo systemctl restart fail2ban
+
+# Install Solana
+echo "Installing Solana CLI..."
+sh -c "$(curl -sSfL https://release.solana.com/${SOLANA_VERSION}/install)"
+export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
+# Verify installation
+solana --version
+
+# Configure Solana CLI
+echo "Configuring Solana CLI..."
+solana config set --url https://api.mainnet-beta.solana.com
+
+# Start Solana validator
+echo "Starting Solana validator..."
+solana-validator \
+    --identity $IDENTITY_PATH \
+    --vote-account $VOTE_ACCOUNT_PATH \
+    --rpc-port 8899 \
+    --entrypoint $ENTRYPOINT \
+    --wal-recovery-mode skip_any_corrupted_record \
+    --limit-ledger-size
+
