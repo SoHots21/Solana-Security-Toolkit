@@ -1,0 +1,8 @@
+How to Use
+	1.	Navigate to the Deployment Directory
+cd deployment
+2.	Make the Script Executable
+chmod +x deploy_secure_node.sh
+	3.	Run the Deployment Script
+./deploy_secure_node.sh
+Note: Ensure you replace /path/to/identity.json and /path/to/vote-account.json with the actual paths to your Solana identity and vote account files.
